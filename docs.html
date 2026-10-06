@@ -833,7 +833,7 @@ python -m trazezzo.daemon_entry
     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     <div class="body">
       <strong>Security Warning</strong>
-      Binding ke <code>0.0.0.0</code> tanpa nginx/HTTPS = traffic tidak terenkripsi. Default credentials (<code>admin</code>/<code>trazezzo</code>) harus diganti. Untuk production, selalu gunakan nginx reverse proxy + HTTPS. Lihat <a href="#nginx">Nginx Reverse Proxy</a>.
+      Binding ke <code>0.0.0.0</code> tanpa nginx/HTTPS = traffic tidak terenkripsi. Password first-run yang di-generate otomatis (lihat <code>DATA_DIR/initial_admin_password.txt</code>) harus diganti dengan milikmu. Untuk production, selalu gunakan nginx reverse proxy + HTTPS. Lihat <a href="#nginx">Nginx Reverse Proxy</a>.
     </div>
   </div>
 
@@ -1154,8 +1154,8 @@ curl -X POST http://localhost:9122/api/approvals/{id}/reject</pre></div>
       <tr><td><code>LLM_ENV_KEY_NAME</code></td><td>NINEROUTER_API_KEY</td><td>Env key name untuk API key. Override via <code>TRAZEZZO_LLM_KEY_NAME</code>. Bisa <code>OPENAI_API_KEY</code>, <code>OLLAMA_API_KEY</code>, dll.</td></tr>
       <tr><td><code>LLM_ENV_PATH</code></td><td>/etc/trazezzo/.env</td><td>File yang berisi API key. Override via <code>TRAZEZZO_LLM_ENV_PATH</code>.</td></tr>
       <tr><td><code>AUTH_USERNAME</code></td><td>admin</td><td>Dashboard login username. Override via <code>TRAZEZZO_AUTH_USERNAME</code> env.</td></tr>
-      <tr><td><code>AUTH_PASSWORD</code></td><td>trazezzo</td><td>Dashboard login password. Override via <code>TRAZEZZO_AUTH_PASSWORD</code> env. <strong>Change in production!</strong></td></tr>
-      <tr><td><code>SESSION_SECRET</code></td><td>auto-generated</td><td>Session cookie signing secret. Override via <code>TRAZEZZO_SESSION_SECRET</code> env for persistent sessions across restarts.</td></tr>
+      <tr><td><code>AUTH_PASSWORD</code></td><td>random (first run)</td><td>No default password ships with the code. Unset = random password generated at first start and written to <code>DATA_DIR/initial_admin_password.txt</code> (mode 600). Override via <code>TRAZEZZO_AUTH_PASSWORD</code> env.</td></tr>
+      <tr><td><code>SESSION_SECRET</code></td><td>auto (persisted)</td><td>Session cookie signing key — auto-generated once and stored in <code>DATA_DIR/session_secret</code>, so logins survive restarts. Override via <code>TRAZEZZO_SESSION_SECRET</code>.</td></tr>
     </tbody>
   </table>
 </section>
@@ -1167,17 +1167,16 @@ curl -X POST http://localhost:9122/api/approvals/{id}/reject</pre></div>
   <h2>Authentication</h2>
   <p>Trazezzo dilengkapi login page untuk mengamankan akses dashboard. Session-based auth menggunakan signed cookies (SessionMiddleware).</p>
 
-  <h3>Default Credentials</h3>
-  <table class="spec-table">
-    <thead><tr><th>Field</th><th>Default</th><th>Env Variable</th></tr></thead>
-    <tbody>
-      <tr><td>Username</td><td><code>admin</code></td><td><code>TRAZEZZO_AUTH_USERNAME</code></td></tr>
-      <tr><td>Password</td><td><code>trazezzo</code></td><td><code>TRAZEZZO_AUTH_PASSWORD</code></td></tr>
-    </tbody>
-  </table>
+  <h3>First-Run Credentials</h3>
+  <p>Trazezzo tidak membawa password default di dalam source code. Pada start pertama, aplikasi generate password acak untuk user <code>admin</code> lalu menyimpannya ke <code>/var/lib/trazezzo/initial_admin_password.txt</code> (permission 600):</p>
+  <div class="code-block">
+    <div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+    <div class="code-body"><pre><span class="com"># Read the generated first-run password</span>
+cat /var/lib/trazezzo/initial_admin_password.txt</pre></div>
+  </div>
 
   <div class="callout callout-warning">
-    <strong>⚠️ Change default credentials in production!</strong> Set via environment variables in systemd service or <code>.env</code> file.
+    <strong>⚠️ Set your own credentials in production!</strong> Set <code>TRAZEZZO_AUTH_USERNAME</code> + <code>TRAZEZZO_AUTH_PASSWORD</code> via systemd environment (see below), lalu hapus file first-run password.
   </div>
 
   <h3>Changing Credentials</h3>
