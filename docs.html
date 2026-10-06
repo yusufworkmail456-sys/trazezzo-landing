@@ -181,6 +181,7 @@ a:hover{text-decoration:underline}
     <a class="toc-item" href="#auth">Authentication</a>
     <a class="toc-item" href="#api">API Endpoints</a>
     <a class="toc-item" href="#cli">CLI Commands</a>
+    <a class="toc-item" href="#changelog">Release Notes</a>
   </nav>
 </aside>
 
@@ -990,7 +991,7 @@ LLM_ENV_PATH     = <span class="str">"/etc/trazezzo/.env"</span></pre></div>
       </tr>
       <tr>
         <td><strong>Agent</strong></td>
-        <td>Full operation mode. LLM dapat propose commands (exec, read_file, write_file, git_push, service_action) yang dieksekusi di server.</td>
+        <td>Full operation mode. LLM dapat propose commands (exec, read_file, write_file, event_query, git_push, service_action) yang dieksekusi di server.</td>
         <td>"Restart nginx dan cek config"</td>
       </tr>
     </tbody>
@@ -1009,9 +1010,11 @@ LLM_ENV_PATH     = <span class="str">"/etc/trazezzo/.env"</span></pre></div>
 <span class="com"># exec           — run shell command (with safety checks)</span>
 <span class="com"># read_file      — read file contents</span>
 <span class="com"># write_file     — write content to file</span>
-<span class="com"># list_dir       — list directory contents</span>
+<span class="com"># event_query    — query the event store (temporal analytics)</span>
+<span class="com"># service_action — start/stop/restart a service</span>
 <span class="com"># git_push       — git add + commit + push</span>
-<span class="com"># service_action — start/stop/restart a service</span></pre></div>
+<span class="com"># read_repo_file / read_repo_tree — read from GitHub</span>
+<span class="com"># push_repo_file / create_pr     — push fix / open PR</span></pre></div>
   </div>
 </section>
 
@@ -1146,10 +1149,10 @@ curl -X POST http://localhost:9122/api/approvals/{id}/reject</pre></div>
       <tr><td><code>CAPTURE_AUDITD</code></td><td>True</td><td>Enable auditd kernel event capture.</td></tr>
       <tr><td><code>CAPTURE_PSUTIL</code></td><td>True</td><td>Enable psutil metrics capture (CPU, RAM, disk, net).</td></tr>
       <tr><td><code>CAPTURE_METRICS_INTERVAL</code></td><td>5</td><td>psutil polling interval (seconds).</td></tr>
-      <tr><td><code>LLM_BASE_URL</code></td><td><code>https://9router.amital.co.id/v1</code></td><td>OpenAI-compatible API base URL. 9Router by default, ganti dengan provider Anda sendiri (e.g. <code>https://9router.com/v1</code>, <code>https://api.openai.com/v1</code>).</td></tr>
-      <tr><td><code>LLM_MODEL</code></td><td>coding</td><td>LLM model name. Sesuaikan dengan provider (e.g. <code>gpt-4o</code>, <code>llama3.2</code>).</td></tr>
-      <tr><td><code>LLM_ENV_KEY_NAME</code></td><td>HERMES_CUSTOM_9ROUTER_AMITAL_CO_ID_API_KEY</td><td>Env key name untuk API key. Bisa <code>NINEROUTER_API_KEY</code>, <code>OPENAI_API_KEY</code>, <code>OLLAMA_API_KEY</code>, dll.</td></tr>
-      <tr><td><code>LLM_ENV_PATH</code></td><td>/root/.hermes/.env</td><td>Path ke file env yang berisi API key. Sesuaikan dengan setup Anda (e.g. <code>/etc/trazezzo/.env</code>).</td></tr>
+      <tr><td><code>LLM_BASE_URL</code></td><td><code>https://9router.com/v1</code></td><td>OpenAI-compatible API base URL. Override via <code>TRAZEZZO_LLM_BASE_URL</code> env (9Router default; ganti ke OpenAI, Ollama, vLLM, dll).</td></tr>
+      <tr><td><code>LLM_MODEL</code></td><td>coding</td><td>LLM model name. Override via <code>TRAZEZZO_LLM_MODEL</code> (e.g. <code>gpt-4o</code>, <code>llama3.2</code>).</td></tr>
+      <tr><td><code>LLM_ENV_KEY_NAME</code></td><td>NINEROUTER_API_KEY</td><td>Env key name untuk API key. Override via <code>TRAZEZZO_LLM_KEY_NAME</code>. Bisa <code>OPENAI_API_KEY</code>, <code>OLLAMA_API_KEY</code>, dll.</td></tr>
+      <tr><td><code>LLM_ENV_PATH</code></td><td>/etc/trazezzo/.env</td><td>File yang berisi API key. Override via <code>TRAZEZZO_LLM_ENV_PATH</code>.</td></tr>
       <tr><td><code>AUTH_USERNAME</code></td><td>admin</td><td>Dashboard login username. Override via <code>TRAZEZZO_AUTH_USERNAME</code> env.</td></tr>
       <tr><td><code>AUTH_PASSWORD</code></td><td>trazezzo</td><td>Dashboard login password. Override via <code>TRAZEZZO_AUTH_PASSWORD</code> env. <strong>Change in production!</strong></td></tr>
       <tr><td><code>SESSION_SECRET</code></td><td>auto-generated</td><td>Session cookie signing secret. Override via <code>TRAZEZZO_SESSION_SECRET</code> env for persistent sessions across restarts.</td></tr>
@@ -1220,8 +1223,7 @@ systemctl restart trazezzo</code></pre>
       <tr><td><code>GET</code></td><td>/api/services</td><td>List systemd services with status</td></tr>
       <tr><td><code>POST</code></td><td>/api/services/{unit}/{action}</td><td>Start/stop/restart a service</td></tr>
       <tr><td><code>GET</code></td><td>/api/activity</td><td>Activity feed (filtered by actor: user/agent/system)</td></tr>
-      <tr><td><code>GET</code></td><td>/api/timeline</td><td>Timeline events (last 30 min default)</td></tr>
-      <tr><td><code>GET</code></td><td>/api/diagram</td><td>Service dependency graph data</td></tr>
+      <tr><td><code>GET</code></td><td>/api/timeline</td><td>Timeline events (legacy; /api/causal-timeline preferred)</td></tr>
       <tr><td><code>GET</code></td><td>/api/logs</td><td>Journald logs (filter by unit, line count)</td></tr>
       <tr><td><code>GET</code></td><td>/api/storage</td><td>Disk usage, filesystems, mounts, LVM</td></tr>
       <tr><td><code>GET</code></td><td>/api/containers</td><td>Podman/Docker container list</td></tr>
@@ -1255,6 +1257,11 @@ systemctl restart trazezzo</code></pre>
       <tr><td><code>POST</code></td><td>/api/editor/mkdir</td><td>Create directory</td></tr>
       <tr><td><code>WS</code></td><td>/ws/ssh/{conn_id}</td><td>WebSocket: SSH terminal session (remote)</td></tr>
       <tr><td><code>WS</code></td><td>/ws/terminal</td><td>WebSocket: local terminal session</td></tr>
+      <tr><td><code>GET</code></td><td>/api/causal-timeline</td><td>Causal timeline (window_minutes, before cursor) for the Events Timeline tab</td></tr>
+      <tr><td><code>WS</code></td><td>/ws/events</td><td>WebSocket: live event stream (Events Live Feed)</td></tr>
+      <tr><td><code>WS</code></td><td>/ws/logs</td><td>WebSocket: realtime journald stream (Logs page)</td></tr>
+      <tr><td><code>GET</code></td><td>/api/export/events</td><td>Export events as .json.gz (from/to query params)</td></tr>
+      <tr><td><code>POST</code></td><td>/api/chat/cancel</td><td>Cancel a running agent execution</td></tr>
       <tr><td><code>GET</code></td><td>/api/app-inventory</td><td>List auto-detected apps (nginx proxy_pass + alias)</td></tr>
       <tr><td><code>GET</code></td><td>/api/app-inventory/{app_id}/context</td><td>Get app context for chat session</td></tr>
       <tr><td><code>POST</code></td><td>/api/app-inventory/{app_id}/override</td><td>Set manual repo/description override per app</td></tr>
@@ -1371,19 +1378,19 @@ trazezzo update
         <td><span class="inline-code">get_journal_logs(unit, lines)</span><br><span class="inline-code">GET /api/logs</span></td>
       </tr>
       <tr>
-        <td><strong>Activity Feed</strong></td>
-        <td>Black box recorder. Setiap event diklasifikasi: user (login/sudo), agent (Trazezzo action), system (kernel/systemd). Live WebSocket untuk update timeline.</td>
-        <td><span class="inline-code">build_activity_feed(actor_kind, limit)</span><br><span class="inline-code">GET /api/activity</span></td>
+        <td><strong>Events → Live Feed</strong></td>
+        <td>Black box recorder. Setiap event diklasifikasi: user (login/sudo), agent (Trazezzo action), system (kernel/systemd). Live WebSocket, filter per aktor. Noise (sig-0 kill probe, exec spam) difilter di sisi capture.</td>
+        <td><span class="inline-code">build_activity_feed()</span><br><span class="inline-code">GET /api/activity</span><br><span class="inline-code">WS /ws/events</span></td>
       </tr>
       <tr>
-        <td><strong>Causal Timeline</strong></td>
-        <td>Rekonstruksi window 30 menit sebelum crash/down. vis-timeline.js, warna berbeda untuk setiap event. Jawab "apa yang terjadi sebelum server down?"</td>
-        <td><span class="inline-code">build_timeline(window_minutes)</span><br><span class="inline-code">build_timeline(before, window_minutes, limit)</span><br><span class="inline-code">GET /api/timeline</span></td>
+        <td><strong>Events → Causal Timeline</strong></td>
+        <td>Rekonstruksi window sebelum crash/down (default 30 menit). vis-timeline, warna per severity, klik event untuk detail. Query recent-first dengan window/before cursor (bukan slice event tertua).</td>
+        <td><span class="inline-code">build_timeline(window_minutes)</span><br><span class="inline-code">GET /api/causal-timeline</span></td>
       </tr>
       <tr>
-        <td><strong>System Diagram</strong></td>
-        <td>Auto-discover services, port yang listen, mount, network interface, dan cron jobs → cytoscape.js graph. Visualisasi dependency antar-komponen.</td>
-        <td><span class="inline-code">build_system_graph()</span>·<br><span class="inline-code">GET /api/diagram</span></td>
+        <td><strong>System Diagram (backend)</strong></td>
+        <td>Auto-discover services, listening ports, mounts, network interfaces, cron jobs → dependency graph JSON. Tab graph di UI sudah dihapus (tidak informatif untuk topologi star 1-hub); API tetap tersedia untuk mini-map mendatang.</td>
+        <td><span class="inline-code">build_system_graph()</span><br><span class="inline-code">GET /api/diagram</span></td>
       </tr>
       <tr>
         <td><strong>Networking</strong></td>
@@ -1436,9 +1443,9 @@ trazezzo update
         <td><span class="inline-code">terminal_websocket(ws)</span><br><span class="inline-code">WS /ws/terminal</span></td>
       </tr>
       <tr>
-        <td><strong>Sync &amp; Archive</strong></td>
-        <td>Warm → cold gzip archive. Event yang &gt;7 hari otomatis di-prune dari warm store. Dikompresi menjadi <span class="inline-code">.json.gz</span>. Manual &amp; cron-scheduled. Default retention 7 hari.</td>
-        <td><span class="inline-code">archive_warm_to_cold()</span><br><span class="inline-code">get_cron_status()</span></td>
+        <td><strong>Event Export</strong></td>
+        <td>Download event dalam rentang waktu tertentu sebagai <span class="inline-code">.json.gz</span>, membaca warm store langsung (tanpa langkah archive). Halaman <span class="inline-code">/export</span>: pilih rentang → download.</td>
+        <td><span class="inline-code">GET /api/export/events</span></td>
       </tr>
     </tbody>
   </table>
@@ -1456,7 +1463,7 @@ trazezzo update
       </tr>
       <tr>
         <td><strong>AI Agent Mode</strong></td>
-        <td>Mode eksekusi penuh. LLM propose action dalam JSON action block, server eksekusi dan berikan hasil kembali ke LLM untuk round berikutnya. Max 8 round, 6 tool: exec, read_file, write_file, list_dir, git_push, service_action.</td>
+        <td>Mode eksekusi penuh. LLM propose action dalam JSON action block, server eksekusi dan berikan hasil kembali ke LLM untuk round berikutnya. Max 8 round; tools: exec, read_file, write_file, event_query, service_action, domain_inventory, read_repo_file/read_repo_tree, push_repo_file, create_pr, git_push.</td>
         <td><span class="inline-code">run_agent(user_message, context, history, image)</span><br><span class="inline-code">POST /api/chat</span></td>
       </tr>
       <tr>
@@ -1556,6 +1563,36 @@ trazezzo update
 </section>
 
 <!-- ═════════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- RELEASE NOTES -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="section" id="changelog">
+  <h2>Release Notes</h2>
+
+  <h3>v0.2.1 — Open-source release</h3>
+  <ul>
+    <li><strong>Repo packaging</strong> — proyek kini berupa Python package standar (<span class="inline-code">trazezzo/</span> + <span class="inline-code">pyproject.toml</span>), siap <span class="inline-code">pip install -e .</span></li>
+    <li><strong>Generic config</strong> — LLM endpoint, model, key name, dan env path sekarang env-driven dengan default generik (<span class="inline-code">TRAZEZZO_LLM_*</span>); tidak ada lagi path/URL spesifik satu server di dalam kode</li>
+    <li><strong>README, LICENSE (MIT), .gitignore</strong> ditambahkan</li>
+  </ul>
+
+  <h3>v0.2.0 — Noise, timeline, logs, AI</h3>
+  <ul>
+    <li><strong>Kill/exec noise difilter</strong> — kill event probe <span class="inline-code">sig 0</span> dibuang, exec di-rate-limit. Event turun dari ~4.400/menit (99,9% noise) ke ~107/menit</li>
+    <li><strong>Timeline diperbaiki</strong> — query sebelumnya ASC/500 event tertua (blank); sekarang recent-first dengan cursor <span class="inline-code">before</span></li>
+    <li><strong>Logs realtime</strong> — journal tailer publish ke WS bus; UI streaming dengan pause + filter (sebelumnya harus klik Refresh manual)</li>
+    <li><strong>Tab Graph dihapus</strong> — 58 node star-topology = hairball tanpa informasi; backend diagram disimpan</li>
+    <li><strong>AI event_query</strong> — agregasi temporal (summary/errors/timeline/top_sources/by_type) jadi tool agent; pertanyaan seperti "kenapa RAM tinggi jam 2?" kini bisa dijawab</li>
+    <li><strong>AI markdown rapi</strong> — self-hosted marked + DOMPurify (tanpa CDN), output tidak lagi mentah/berantakan</li>
+    <li><strong>Storage</strong> — badge local vs network filesystem + bagian fstab "configured but not mounted"</li>
+    <li><strong>App inventory diperkuat</strong> — health probe per app (root /, fallback path nginx), mapping unit via <span class="inline-code">/proc/PID/cgroup</span> (bug <span class="inline-code">user@0</span> diperbaiki), parsing nama unit</li>
+    <li><strong>Proactive advisory cooldown</strong> — issue yang sama tidak spam setiap interval</li>
+    <li><strong>Sync &amp; Archive dihapus</strong> — prune &gt;7 hari berjalan sebelum sync sehingga archive selalu kosong; digantikan <strong>Event Export</strong> yang membaca DB langsung</li>
+    <li><strong>Proactive mode toggle</strong> — badge Overview kini mengikuti mode aktif (bug import by-value)</li>
+    <li><strong>UI bahasa Inggris konsisten</strong> di seluruh halaman; prompt AI menjawab sesuai bahasa user</li>
+  </ul>
+</section>
+
 <!-- TRAZEZZO vs CLI -->
 <!-- ═════════════════════════════════════════════════════════════════════ -->
 <section class="section" id="vs-cli">
